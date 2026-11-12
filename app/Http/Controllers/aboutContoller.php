@@ -1,15 +1,17 @@
 <?php
-
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
 use App\Models\About;
+use App\Models\User;
 
 class aboutContoller extends Controller
 {
     public function index()
     {
         $about = About::all();
-        return view('portfolio.about', compact('about'));
+
+        $user = User::with('profile')->first();
+
+        return view('portfolio.about', compact('about', 'user'));
     }
 }

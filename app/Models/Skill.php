@@ -10,4 +10,10 @@ class Skill extends Model
         'name',
         'level',
     ];
+
+
+    public function projects()
+    {
+        return $this->belongsToMany(Project::class);
+    }
 }

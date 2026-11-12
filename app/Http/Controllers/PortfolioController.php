@@ -10,16 +10,15 @@ use Illuminate\Http\Request;
 
 class PortfolioController extends Controller
 {
-public function home()
-{
-    $about = About::first();
+    public function home()
+    {
+        $about = About::first();
 
-    $skills = Skill::all();
+        $skills = Skill::all();
 
-    $projects = Project::all();
-
-    return view('portfolio.home', compact('about', 'skills', 'projects'));
-}
+        $projects = Project::with('skills')->get();
+        return view('portfolio.home', compact('about', 'skills', 'projects'));
+    }
 
     public function about(): View
     {
@@ -31,24 +30,37 @@ public function home()
 
     public function projects(): View
     {
-        $projects = Project::all();
+        $projects = Project::with('skills')->get();
 
         return view('portfolio.projects', compact('projects'));
     }
     public function create()
     {
-        return view('portfolio.create');
+        $skills = Skill::all();
+
+        return view('portfolio.create', compact('skills'));
     }
+
     public function store(Request $request)
     {
         $validatedData = $request->validate([
             'title' => 'required|string|max:255',
             'description' => 'required|string',
+            'skills' => 'nullable|array',
+            'skills.*' => 'integer|distinct|exists:skills,id',
         ]);
-        Project::create($validatedData);
 
-        return redirect()->route('projects')->with('success', 'Project created successfully.');
+        $project = $request->user()->projects()->create([
+            'title' => $validatedData['title'],
+            'description' => $validatedData['description'],
+        ]);
+
+        $project->skills()->sync($validatedData['skills'] ?? []);
+
+        return redirect()->route('projects')
+            ->with('success', 'Project created successfully.');
     }
+
     public function edit(Project $project)
     {
         return view('portfolio.edit', compact('project'));
